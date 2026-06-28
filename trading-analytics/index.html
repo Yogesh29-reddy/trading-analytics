@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yogesh - Markets & Trading Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+
+    <!-- 1. AUTHENTICATION GATEWAY -->
+    <div id="authGatePage">
+        <div class="auth-container">
+            <div class="auth-brand">Yogesh<span>.Markets</span></div>
+            
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">Login</button>
+                <button class="tab-btn" id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
+            </div>
+
+            <!-- LOGIN VIEW SECTION -->
+            <div id="loginFormSection">
+                <form id="mainLoginForm">
+                    <div class="form-group">
+                        <label for="loginIdentifier">Email ID or Mobile Number</label>
+                        <input type="text" id="loginIdentifier" placeholder="Enter registration detail" required>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                            <label for="loginKey" style="margin-bottom: 0;">Password</label>
+                            <a href="javascript:void(0)" onclick="switchAuthTab('forgot')" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                        </div>
+                        <input type="password" id="loginKey" placeholder="••••••••" required>
+                    </div>
+                    <div class="hint-text" id="loginErrorBox" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--error); padding: 0.6rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; font-weight: 500;"></div>
+                    <button type="submit" class="submit-btn">Secure Login</button>
+                </form>
+            </div>
+
+            <!-- FORGOT PASSWORD SECTION -->
+            <div id="forgotFormSection" class="hidden">
+                <form id="mainForgotForm">
+                    <div class="form-group">
+                        <label for="forgotIdentifier">Registered Email ID or Username</label>
+                        <input type="text" id="forgotIdentifier" placeholder="Enter registered detail" required>
+                    </div>
+                    <div class="hint-text" id="forgotAlertBox" style="padding: 0.6rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; font-weight: 500; border: 1px solid transparent;"></div>
+                    <button type="submit" class="submit-btn">Recover Password</button>
+                    <button type="button" class="submit-btn" style="background: var(--bg-light-dark); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: 0.5rem;" onclick="switchAuthTab('login')">Back to Login</button>
+                </form>
+            </div>
+
+            <!-- REGISTRATION VIEW SECTION -->
+            <div id="registerFormSection" class="hidden">
+                <form id="mainRegisterForm">
+                    <div class="form-group">
+                        <label for="regName">Your Name</label>
+                        <input type="text" id="regName" placeholder="Name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regContact">Email Address (for real OTP reception)</label>
+                        <div class="inline-group">
+                            <input type="email" id="regContact" placeholder="name@gmail.com" required>
+                            <button type="button" class="action-btn" id="otpTrigger">Get OTP</button>
+                        </div>
+                        <div class="hint-text" id="otpAlertBox"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regOtpVerify">Enter 4-Digit OTP</label>
+                        <input type="text" id="regOtpVerify" placeholder="Verification Code" disabled required maxlength="4">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPasswordSet">Keep Password</label>
+                        <input type="password" id="regPasswordSet" placeholder="Establish access password" disabled required>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="registerSubmitBtn" disabled>Complete Signup</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. PROTECTED HOMEPAGE ENVIRONMENT -->
+    <div id="protectedHomePage">
+        <header>
+            <nav class="navbar">
+                <div class="logo">Yogesh<span>.Analytics</span></div>
+                <ul class="nav-links">
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#knowledge">Market Knowledge</a></li>
+                    <li><a href="javascript:void(0)" class="logout-btn" id="logoutTrigger">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- User Status bar: credits, balances, simulated trade results -->
+        <div class="user-status-bar">
+            <div class="user-status-container">
+                <div class="user-welcome">
+                    Account: <span id="userWelcomeSpan">Trader</span>
+                </div>
+                <div style="display:flex; align-items:center; gap: 1.5rem;">
+                    <div>Simulated Balance: <span id="userBalanceSpan" style="color:var(--success); font-weight:700;">$10,000.00</span></div>
+                    <div class="credit-badge" id="creditBadge" title="Click to buy more credits">70 Credits</div>
+                    <button class="action-btn" id="buyCreditsBtn" style="padding: 0.15rem 0.6rem; font-size: 0.75rem;">Buy Credits</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live scrolling market quotes ticker -->
+        <div class="market-ticker">
+            <div class="ticker-wrap" id="tickerWrap">
+                <!-- Javascript populates items here -->
+            </div>
+        </div>
+
+        <section class="hero">
+            <h1>Global Market Trading Mechanics</h1>
+            <p>Master the underlying structure, operational frameworks, and risk primitives governing global liquidity pools and digital assets.</p>
+        </section>
+
+        <!-- Dynamic Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left Side controls: Trade panel & Calculator -->
+            <div class="dashboard-sidebar">
+                
+                <!-- Quick Trade Widget -->
+                <div class="widget-panel">
+                    <div class="widget-title">Simulated Trading</div>
+                    <div class="trade-selector">
+                        <button class="trade-tab buy active" id="tabBuy" onclick="setTradeDirection('BUY')">BUY (LONG)</button>
+                        <button class="trade-tab sell" id="tabSell" onclick="setTradeDirection('SELL')">SELL (SHORT)</button>
+                    </div>
+                    <form id="quickTradeForm">
+                        <div class="trade-input-grp">
+                            <label for="tradePairSelect">Trading Asset</label>
+                            <select id="tradePairSelect">
+                                <option value="BTC/USD">Bitcoin (BTC/USD)</option>
+                                <option value="ETH/USD">Ethereum (ETH/USD)</option>
+                                <option value="SOL/USD">Solana (SOL/USD)</option>
+                                <option value="EUR/USD">Euro / US Dollar (EUR/USD)</option>
+                                <option value="GBP/USD">Pound / US Dollar (GBP/USD)</option>
+                                <option value="XAU/USD">Gold Spot (XAU/USD)</option>
+                            </select>
+                        </div>
+                        <div class="trade-input-grp">
+                            <label for="tradeSize">Position Size (Units)</label>
+                            <input type="number" id="tradeSize" value="10" min="1" step="any" required>
+                        </div>
+                        <button type="submit" class="trade-action-btn" id="tradeSubmitBtn">Place Buy Market Order</button>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; text-align: center;">
+                            *Placing a trade costs 2 credits
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Position Size Calculator Widget -->
+                <div class="widget-panel">
+                    <div class="widget-title">Position Size Calculator</div>
+                    <div class="trade-input-grp">
+                        <label for="calcBalance">Account Balance ($)</label>
+                        <input type="number" id="calcBalance" value="10000" min="1">
+                    </div>
+                    <div class="calc-row">
+                        <div class="trade-input-grp">
+                            <label for="calcRiskPercent">Risk Amount (%)</label>
+                            <input type="number" id="calcRiskPercent" value="1.0" min="0.1" step="0.1">
+                        </div>
+                        <div class="trade-input-grp">
+                            <label for="calcEntry">Entry Price</label>
+                            <input type="number" id="calcEntry" step="any">
+                        </div>
+                    </div>
+                    <div class="trade-input-grp">
+                        <label for="calcStopLoss">Stop Loss Price</label>
+                        <input type="number" id="calcStopLoss" step="any">
+                    </div>
+
+                    <div class="calc-output">
+                        <div class="calc-output-item">
+                            <span>Amount At Risk:</span>
+                            <span class="value" id="outRiskAmount">$0.00</span>
+                        </div>
+                        <div class="calc-output-item">
+                            <span>SL Distance:</span>
+                            <span class="value" id="outPipDiff">0 Pips</span>
+                        </div>
+                        <div class="calc-output-item">
+                            <span>Rec. Size:</span>
+                            <span class="value highlight" id="outPositionSize">0 Units</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Workspace: TradingView Chart & Trade Journal -->
+            <div class="dashboard-main">
+                
+                <!-- Chart Panel -->
+                <div class="chart-panel">
+                    <div class="chart-header">
+                        <div style="display:flex; align-items:center; gap: 1rem;">
+                            <div class="chart-controls" style="display:flex; align-items:center; gap:0.5rem;">
+                                <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:700;">Select Asset:</span>
+                                <select id="chartSymbolSelector" class="chart-btn" style="padding: 0.4rem 1.8rem 0.4rem 0.8rem; background: var(--bg-light-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-weight: 600; outline: none; cursor: pointer; font-size:0.85rem;" onchange="selectSymbol(this.value)">
+                                    <optgroup label="Cryptocurrency Networks">
+                                        <option value="BTC/USD">Bitcoin (BTC/USD)</option>
+                                        <option value="ETH/USD">Ethereum (ETH/USD)</option>
+                                        <option value="SOL/USD">Solana (SOL/USD)</option>
+                                        <option value="BNB/USD">Binance Coin (BNB/USD)</option>
+                                        <option value="XRP/USD">Ripple (XRP/USD)</option>
+                                        <option value="ADA/USD">Cardano (ADA/USD)</option>
+                                    </optgroup>
+                                    <optgroup label="Foreign Exchange (Forex)">
+                                        <option value="EUR/USD">Euro / US Dollar (EUR/USD)</option>
+                                        <option value="GBP/USD">British Pound / US Dollar (GBP/USD)</option>
+                                        <option value="USD/JPY">US Dollar / Japanese Yen (USD/JPY)</option>
+                                        <option value="AUD/USD">Australian Dollar / US Dollar (AUD/USD)</option>
+                                        <option value="USD/CAD">US Dollar / Canadian Dollar (USD/CAD)</option>
+                                        <option value="USD/CHF">US Dollar / Swiss Franc (USD/CHF)</option>
+                                        <option value="EUR/GBP">Euro / British Pound (EUR/GBP)</option>
+                                    </optgroup>
+                                    <optgroup label="Commodities & Indices">
+                                        <option value="XAU/USD">Gold Spot (XAU/USD)</option>
+                                        <option value="XAG/USD">Silver Spot (XAG/USD)</option>
+                                        <option value="SPX500">S&P 500 Index</option>
+                                        <option value="US30">Dow Jones Index</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; font-family: var(--font-heading);">
+                            Live Market Analytics (Real-time Feed)
+                        </div>
+                    </div>
+
+                    <div class="chart-canvas-container" style="height: 420px; position: relative;">
+                        <div id="tradingview_chart" style="height: 100%; width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Trade Journal Widget -->
+                <div class="journal-panel">
+                    <div class="widget-title">Simulated Positions (Live Updates)</div>
+                    <div class="table-wrapper">
+                        <table class="journal-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Asset</th>
+                                    <th>Size</th>
+                                    <th>Entry Price</th>
+                                    <th>Current Price</th>
+                                    <th>Unrealised P&L</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journalTableBody">
+                                <!-- Tr generated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Static Knowledge grid containing basic definitions -->
+        <main class="knowledge-container" id="knowledge">
+            <h2 class="section-title">Essential Market Frameworks</h2>
+            <div class="grid">
+                
+                <!-- Card 1: Forex Mechanics -->
+                <div class="card">
+                    <div class="card-content">
+                        <div class="card-badge">Forex</div>
+                        <h3 class="card-title">Foreign Exchange Market Structures</h3>
+                        <p class="card-desc">The Forex market is a decentralized global framework for trading national currencies. It operates via an over-the-counter (OTC) network of global financial institutions rather than a single centralized exchange.</p>
+                        <ul class="knowledge-list">
+                            <li><strong>Currency Pairs:</strong> Prices are quoted in pairs (e.g., EUR/USD). The first currency is the Base, and the second is the Quote.</li>
+                            <li><strong>High Liquidity & Leverage:</strong> It features the highest liquidity globally, allowing major market participants to trade with leverage.</li>
+                            <li><strong>24/5 Operation:</strong> Trades continuously across major geographic sessions: Sydney, Tokyo, London, and New York.</li>
+                        </ul>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                            <a href="javascript:void(0)" onclick="openKnowledgeModal('forex')" class="action-link">Open Guide &rarr;</a>
+                            <a href="https://www.babypips.com" target="_blank" class="action-link" style="color:var(--text-muted); font-size:0.8rem;">BabyPips</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Crypto Assets -->
+                <div class="card">
+                    <div class="card-content">
+                        <div class="card-badge crypto">Cryptocurrency</div>
+                        <h3 class="card-title">Digital Assets & Blockchain Markets</h3>
+                        <p class="card-desc">Cryptocurrency trading operates on public cryptographic ledger verification architectures. Unlike standard fiat systems, order books are distributed globally across centralized and decentralized automated protocols.</p>
+                        <ul class="knowledge-list crypto-list">
+                            <li><strong>24/7/365 Liquidity:</strong> Digital token ecosystems settle transactions constantly without structural weekend bank closures.</li>
+                            <li><strong>Volatility Frameworks:</strong> Driven strictly by retail sentiment shifts, technological adoption cycles, and code-enforced supply metrics.</li>
+                            <li><strong>DeFi Ecosystems:</strong> Smart contracts allow decentralized spot matching and margin routing directly via personal cryptographic keys.</li>
+                        </ul>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                            <a href="javascript:void(0)" onclick="openKnowledgeModal('crypto')" class="action-link">Open Guide &rarr;</a>
+                            <a href="https://www.coingecko.com" target="_blank" class="action-link" style="color:var(--text-muted); font-size:0.8rem;">CoinGecko</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Risk Parameters -->
+                <div class="card">
+                    <div class="card-content">
+                        <div class="card-badge risk">Risk Architecture</div>
+                        <h3 class="card-title">Position Sizing & Capital Preservation</h3>
+                        <p class="card-desc">Successful deployment of technical models requires strict mechanical limits. Uncontrolled leverage configurations undermine probability distributions over statistically meaningful sample sets.</p>
+                        <ul class="knowledge-list risk-list">
+                            <li><strong>Risk-to-Reward Formulas:</strong> Establish invalidation boundaries so that target wins consistently offset accumulated statistical losses.</li>
+                            <li><strong>Asymmetrical Drawdown Mechanics:</strong> Capital recovery requirements scale exponentially relative to account equity degradation points.</li>
+                            <li><strong>Leverage vs. Margin Call:</strong> High debt allocations collapse effective margins during counter-trend liquidity gaps.</li>
+                        </ul>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                            <a href="javascript:void(0)" onclick="openKnowledgeModal('risk')" class="action-link">Open Guide &rarr;</a>
+                            <a href="https://www.investopedia.com/articles/trading/04/091504.asp" target="_blank" class="action-link" style="color:var(--text-muted); font-size:0.8rem;">Investopedia</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Yogesh Financial Analytics. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- KNOWLEDGE BASE MODAL WINDOWS -->
+    
+    <!-- Forex Modal -->
+    <div class="modal-overlay" id="modal-forex">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeKnowledgeModal('forex')">&times;</button>
+            <div class="modal-body">
+                <span class="card-badge">Forex</span>
+                <h3 style="margin-top:0.75rem;">Foreign Exchange Advanced Frameworks</h3>
+                <p>The foreign exchange market is the largest, most liquid financial market in the world, with a daily volume exceeding $7 trillion. Rather than a centralized exchange, trading occurs via the Interbank market, consisting of top-tier global banks trading directly with each other.</p>
+                <p><strong>Key Market Drivers:</strong></p>
+                <ul>
+                    <li><strong>Interest Rate Differentials:</strong> Determined by Central Banks (like the Federal Reserve or European Central Bank). Currencies with higher interest rates attract yield-seeking capital.</li>
+                    <li><strong>Macroeconomic Releases:</strong> Non-Farm Payrolls (NFP), Consumer Price Index (CPI), and GDP figures cause significant changes in relative value.</li>
+                    <li><strong>Risk On / Risk Off Flows:</strong> Safe-haven currencies (USD, CHF, JPY) appreciate during geopolitical conflicts, while high-yielding risk-sensitive assets (AUD, NZD) depreciate.</li>
+                </ul>
+                <p><em>Use BabyPips link to read full tutorials on market setups.</em></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crypto Modal -->
+    <div class="modal-overlay" id="modal-crypto">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeKnowledgeModal('crypto')">&times;</button>
+            <div class="modal-body">
+                <span class="card-badge crypto">Cryptocurrency</span>
+                <h3 style="margin-top:0.75rem;">Digital Token Valuations & Blockchain Mechanics</h3>
+                <p>Cryptocurrency networks operate as peer-to-peer databases maintaining a synchronized shared ledger (blockchain) secured by cryptographic algorithms. This eliminates double-spending without needing a single trusted clearinghouse.</p>
+                <p><strong>Important Structural Parameters:</strong></p>
+                <ul>
+                    <li><strong>Orderbook Aggregation:</strong> Pricing occurs across fragmented global exchanges. Arbitrage bots keep rates balanced across platforms like Binance, Coinbase, and Uniswap.</li>
+                    <li><strong>Decentralized Liquidity Pools (DEXs):</strong> Automated Market Makers (AMMs) use formulas like \(x \times y = k\) to swap assets peer-to-peer from pooled liquidity instead of traditional order books.</li>
+                    <li><strong>Halving & Scarcity Cycles:</strong> Protocols like Bitcoin programmatically reduce supply issuance rewards at fixed block intervals, driving long-term cyclical valuations.</li>
+                </ul>
+                <p><em>Use CoinGecko link to analyze real-time market cap lists.</em></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Modal -->
+    <div class="modal-overlay" id="modal-risk">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeKnowledgeModal('risk')">&times;</button>
+            <div class="modal-body">
+                <span class="card-badge risk">Risk Architecture</span>
+                <h3 style="margin-top:0.75rem;">Capital Preservation & Quantitative Sizing</h3>
+                <p>Statistical expectancy is the core of profitable trading. A model with a 40% win rate can be highly profitable if the average win is double the size of the average loss. Risk management ensures that drawdowns do not trigger capital ruin.</p>
+                <p><strong>The Mathematics of Drawdowns:</strong></p>
+                <ul>
+                    <li>If you lose 10% of your account capital, you need an 11% gain to recover.</li>
+                    <li>If you lose 50% of your account capital, you need a 100% gain to recover.</li>
+                    <li>If you lose 90% of your account capital, you need a 900% gain just to break even!</li>
+                </ul>
+                <p><strong>Optimal Position Formula:</strong></p>
+                <p style="text-align: center; margin: 1rem 0;">
+                    \[\text{Position Size} = \frac{\text{Account Capital} \times \text{Risk Percent}}{\text{Stop Loss Distance}}\]
+                </p>
+                <p>By enforcing a strict 1% maximum capital risk per trade, you can survive a consecutive run of 20 losses and still retain 80% of your trading capital to deploy when market patterns align.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
