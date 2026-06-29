@@ -105,10 +105,16 @@
                 <div class="user-welcome">
                     Account: <span id="userWelcomeSpan">Trader</span>
                 </div>
-                <div style="display:flex; align-items:center; gap: 1.5rem;">
-                    <div>Simulated Balance: <span id="userBalanceSpan" style="color:var(--success); font-weight:700;">$10,000.00</span></div>
+                <div style="display:flex; align-items:center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display:flex; align-items:center; gap: 0.5rem; margin-right: 0.5rem;">
+                        <span>Balance:</span>
+                        <span id="userBalanceSpan" style="color:var(--success); font-weight:700;">$10,000.00</span>
+                    </div>
+                    <button class="action-btn" id="depositTriggerBtn" onclick="openFundingModal('deposit')" style="background-color: var(--success); border-color: var(--success); padding: 0.25rem 0.8rem; font-size: 0.8rem;">Deposit Capital</button>
+                    <button class="action-btn" id="withdrawTriggerBtn" onclick="openFundingModal('withdraw')" style="background-color: var(--bg-light-dark); border-color: var(--border-color); padding: 0.25rem 0.8rem; font-size: 0.8rem;">Withdraw Funds</button>
+                    <span style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 0.5rem;"></span>
                     <div class="credit-badge" id="creditBadge" title="Click to buy more credits">70 Credits</div>
-                    <button class="action-btn" id="buyCreditsBtn" style="padding: 0.15rem 0.6rem; font-size: 0.75rem;">Buy Credits</button>
+                    <button class="action-btn" id="buyCreditsBtn" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">Buy Credits</button>
                 </div>
             </div>
         </div>
@@ -218,6 +224,12 @@
                                         <option value="BNB/USD">Binance Coin (BNB/USD)</option>
                                         <option value="XRP/USD">Ripple (XRP/USD)</option>
                                         <option value="ADA/USD">Cardano (ADA/USD)</option>
+                                        <option value="DOGE/USD">Dogecoin (DOGE/USD)</option>
+                                        <option value="DOT/USD">Polkadot (DOT/USD)</option>
+                                        <option value="LINK/USD">Chainlink (LINK/USD)</option>
+                                        <option value="MATIC/USD">Polygon (MATIC/USD)</option>
+                                        <option value="SHIB/USD">Shiba Inu (SHIB/USD)</option>
+                                        <option value="LTC/USD">Litecoin (LTC/USD)</option>
                                     </optgroup>
                                     <optgroup label="Foreign Exchange (Forex)">
                                         <option value="EUR/USD">Euro / US Dollar (EUR/USD)</option>
@@ -227,12 +239,27 @@
                                         <option value="USD/CAD">US Dollar / Canadian Dollar (USD/CAD)</option>
                                         <option value="USD/CHF">US Dollar / Swiss Franc (USD/CHF)</option>
                                         <option value="EUR/GBP">Euro / British Pound (EUR/GBP)</option>
+                                        <option value="GBP/JPY">British Pound / Japanese Yen (GBP/JPY)</option>
+                                        <option value="EUR/JPY">Euro / Japanese Yen (EUR/JPY)</option>
+                                        <option value="AUD/JPY">Australian Dollar / Japanese Yen (AUD/JPY)</option>
+                                        <option value="NZD/USD">New Zealand Dollar / US Dollar (NZD/USD)</option>
+                                        <option value="USD/SGD">US Dollar / Singapore Dollar (USD/SGD)</option>
+                                        <option value="USD/ZAR">US Dollar / South African Rand (USD/ZAR)</option>
+                                        <option value="USD/INR">US Dollar / Indian Rupee (USD/INR)</option>
+                                        <option value="EUR/CHF">Euro / Swiss Franc (EUR/CHF)</option>
+                                        <option value="GBP/CHF">British Pound / Swiss Franc (GBP/CHF)</option>
                                     </optgroup>
                                     <optgroup label="Commodities & Indices">
                                         <option value="XAU/USD">Gold Spot (XAU/USD)</option>
                                         <option value="XAG/USD">Silver Spot (XAG/USD)</option>
+                                        <option value="UKOIL">Brent Crude Oil (UKOIL)</option>
+                                        <option value="USOIL">WTI Crude Oil (USOIL)</option>
+                                        <option value="NGAS">Natural Gas (NGAS)</option>
                                         <option value="SPX500">S&P 500 Index</option>
                                         <option value="US30">Dow Jones Index</option>
+                                        <option value="NAS100">NASDAQ 100 Index</option>
+                                        <option value="GER40">DAX 40 Index</option>
+                                        <option value="JPN225">Nikkei 225 Index</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -401,6 +428,84 @@
                     \[\text{Position Size} = \frac{\text{Account Capital} \times \text{Risk Percent}}{\text{Stop Loss Distance}}\]
                 </p>
                 <p>By enforcing a strict 1% maximum capital risk per trade, you can survive a consecutive run of 20 losses and still retain 80% of your trading capital to deploy when market patterns align.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Funding Portal Modal -->
+    <div class="modal-overlay" id="modal-funding">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="modal-close-btn" onclick="closeFundingModal()">&times;</button>
+            <div class="modal-body">
+                <span class="card-badge" style="background-color: var(--success-glow); color: var(--success);" id="fundingModalTitle">Deposit Capital</span>
+                
+                <div class="auth-tabs" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+                    <button class="tab-btn active" id="btnFundingDeposit" onclick="switchFundingTab('deposit')">Deposit</button>
+                    <button class="tab-btn" id="btnFundingWithdraw" onclick="switchFundingTab('withdraw')">Withdraw</button>
+                </div>
+                
+                <!-- Deposit Form -->
+                <div id="fundingDepositSection">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                        Scan the UPI QR code below using <strong>PhonePe, Paytm, Google Pay, or BHIM</strong>, pay, and input your details below to credit your account immediately (Simulated conversion: ₹83.50 INR = $1.00 USD).
+                    </p>
+                    
+                    <div style="display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+                        <img src="qr_scanner.jpg" alt="UPI Scanner QR Code" style="width: 200px; height: auto; border-radius: 8px; margin-bottom: 1rem; border: 4px solid white;">
+                        <div style="font-family: monospace; font-size: 0.9rem; color: var(--text-primary); text-align: center;">
+                            <div>UPI ID: <strong style="color: var(--accent);">7483658029@ybl</strong></div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">Account Name: Yogesh Reddy</div>
+                        </div>
+                    </div>
+                    
+                    <form id="depositFundsForm">
+                        <div class="form-group">
+                            <label for="depositAmountINR">Amount to Deposit (INR - ₹)</label>
+                            <input type="number" id="depositAmountINR" placeholder="Enter amount, e.g. 1000" min="50" required>
+                            <div id="depositUSDConversion" style="font-size: 0.8rem; color: var(--success); margin-top: 0.4rem; font-weight: 600;">
+                                Will Credit: $0.00 USD
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="depositUtr">UPI Transaction ID / Ref No (12 Digits)</label>
+                            <input type="text" id="depositUtr" placeholder="Enter 12-digit UTR/Txn ID" required pattern="\d{12}" title="Please enter a valid 12-digit UPI transaction number">
+                        </div>
+                        <div class="hint-text" id="depositStatusMsg" style="margin-bottom: 1rem;"></div>
+                        <button type="submit" class="submit-btn" style="margin-top: 0.5rem;">Confirm UPI Deposit</button>
+                    </form>
+                </div>
+                
+                <!-- Withdraw Form -->
+                <div id="fundingWithdrawSection" class="hidden">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                        Initiate a withdrawal request from your simulated USD balance directly to your PhonePe, Paytm, or BHIM UPI address (Simulated conversion: $1.00 USD = ₹83.50 INR).
+                    </p>
+                    
+                    <form id="withdrawFundsForm">
+                        <div class="form-group">
+                            <label for="withdrawAmountUSD">Amount to Withdraw ($ USD)</label>
+                            <input type="number" id="withdrawAmountUSD" placeholder="Min $5.00" min="5" step="any" required>
+                            <div id="withdrawINRConversion" style="font-size: 0.8rem; color: var(--accent); margin-top: 0.4rem; font-weight: 600;">
+                                Will Receive: ₹0.00 INR
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="withdrawUpiProvider">Select Payout Method</label>
+                            <select id="withdrawUpiProvider" required style="background-color: var(--bg-darkest); color: var(--text-primary); border: 1px solid var(--border-color);">
+                                <option value="phonepe">PhonePe</option>
+                                <option value="paytm">Paytm</option>
+                                <option value="gpay">Google Pay / UPI</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="withdrawUpiId">Your Destination UPI ID</label>
+                            <input type="text" id="withdrawUpiId" placeholder="username@ybl or mobile@paytm" required>
+                        </div>
+                        <div class="hint-text" id="withdrawStatusMsg" style="margin-bottom: 1rem;"></div>
+                        <button type="submit" class="submit-btn" style="background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%); margin-top: 0.5rem;">Submit UPI Payout</button>
+                    </form>
+                </div>
+                
             </div>
         </div>
     </div>

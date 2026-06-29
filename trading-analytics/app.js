@@ -341,6 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- TradingView Widget Chart Integration ---
     let tvWidgetInstance = null;
 
+    // --- TradingView Widget Chart Integration ---
+    let tvWidgetInstance = null;
+
     function initTradingViewWidget(symbol) {
         // Map asset symbols to TradingView feeds
         let tvSymbol = "COINBASE:BTCUSD";
@@ -349,6 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (symbol === 'BNB/USD') tvSymbol = "BINANCE:BNBUSD";
         else if (symbol === 'XRP/USD') tvSymbol = "BINANCE:XRPUSD";
         else if (symbol === 'ADA/USD') tvSymbol = "BINANCE:ADAUSD";
+        else if (symbol === 'DOGE/USD') tvSymbol = "BINANCE:DOGEUSD";
+        else if (symbol === 'DOT/USD') tvSymbol = "BINANCE:DOTUSD";
+        else if (symbol === 'LINK/USD') tvSymbol = "BINANCE:LINKUSD";
+        else if (symbol === 'MATIC/USD') tvSymbol = "BINANCE:MATICUSD";
+        else if (symbol === 'SHIB/USD') tvSymbol = "BINANCE:SHIBUSD";
+        else if (symbol === 'LTC/USD') tvSymbol = "BINANCE:LTCUSD";
         else if (symbol === 'EUR/USD') tvSymbol = "FX:EURUSD";
         else if (symbol === 'GBP/USD') tvSymbol = "FX:GBPUSD";
         else if (symbol === 'USD/JPY') tvSymbol = "FX:USDJPY";
@@ -356,10 +365,25 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (symbol === 'USD/CAD') tvSymbol = "FX:USDCAD";
         else if (symbol === 'USD/CHF') tvSymbol = "FX:USDCHF";
         else if (symbol === 'EUR/GBP') tvSymbol = "FX:EURGBP";
+        else if (symbol === 'GBP/JPY') tvSymbol = "FX:GBPJPY";
+        else if (symbol === 'EUR/JPY') tvSymbol = "FX:EURJPY";
+        else if (symbol === 'AUD/JPY') tvSymbol = "FX:AUDJPY";
+        else if (symbol === 'NZD/USD') tvSymbol = "FX:NZDUSD";
+        else if (symbol === 'USD/SGD') tvSymbol = "FX:USDSGD";
+        else if (symbol === 'USD/ZAR') tvSymbol = "FX:USDZAR";
+        else if (symbol === 'USD/INR') tvSymbol = "FX:USDINR";
+        else if (symbol === 'EUR/CHF') tvSymbol = "FX:EURCHF";
+        else if (symbol === 'GBP/CHF') tvSymbol = "FX:GBPCHF";
         else if (symbol === 'XAU/USD') tvSymbol = "OANDA:XAUUSD";
         else if (symbol === 'XAG/USD') tvSymbol = "OANDA:XAGUSD";
+        else if (symbol === 'UKOIL') tvSymbol = "TVC:UKOIL";
+        else if (symbol === 'USOIL') tvSymbol = "TVC:USOIL";
+        else if (symbol === 'NGAS') tvSymbol = "TVC:NGAS";
         else if (symbol === 'SPX500') tvSymbol = "FOREXCOM:SPX500";
         else if (symbol === 'US30') tvSymbol = "FOREXCOM:DJI";
+        else if (symbol === 'NAS100') tvSymbol = "FOREXCOM:NAS100";
+        else if (symbol === 'GER40') tvSymbol = "FOREXCOM:GER30";
+        else if (symbol === 'JPN225') tvSymbol = "FOREXCOM:JPN225";
 
         const container = document.getElementById('tradingview_chart');
         if (container) {
@@ -389,6 +413,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 basePrice = 161.20;
                 decimal = 3;
                 volatility = 0.15;
+            } else if (symbol === 'USD/INR') {
+                basePrice = 83.50;
+                decimal = 4;
+                volatility = 0.05;
+            } else if (symbol === 'USD/ZAR') {
+                basePrice = 18.20;
+                decimal = 4;
+                volatility = 0.08;
+            } else if (symbol === 'USD/SGD') {
+                basePrice = 1.35;
+                decimal = 5;
+                volatility = 0.00015;
             } else if (symbol.includes('USD') && !symbol.startsWith('USD/')) {
                 basePrice = 1.15;
                 decimal = 5;
@@ -397,8 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 basePrice = 1.25;
                 decimal = 5;
                 volatility = 0.00015;
-            } else if (symbol.includes('EUR/GBP')) {
-                basePrice = 0.8450;
+            } else if (symbol.includes('EUR/GBP') || symbol.includes('EUR/CHF') || symbol.includes('GBP/CHF')) {
+                basePrice = symbol.includes('EUR/GBP') ? 0.8450 : (symbol.includes('EUR/CHF') ? 0.9620 : 1.1410);
                 decimal = 5;
                 volatility = 0.0001;
             } else if (symbol.includes('XAU')) {
@@ -409,6 +445,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 basePrice = 29.50;
                 decimal = 2;
                 volatility = 0.05;
+            } else if (symbol === 'UKOIL' || symbol === 'USOIL') {
+                basePrice = symbol === 'UKOIL' ? 85.20 : 80.40;
+                decimal = 2;
+                volatility = 0.15;
+            } else if (symbol === 'NGAS') {
+                basePrice = 2.80;
+                decimal = 3;
+                volatility = 0.015;
             } else if (symbol.includes('SPX')) {
                 basePrice = 5480.00;
                 decimal = 1;
@@ -417,6 +461,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 basePrice = 39150.00;
                 decimal = 1;
                 volatility = 30.0;
+            } else if (symbol === 'NAS100') {
+                basePrice = 19700.00;
+                decimal = 1;
+                volatility = 15.0;
+            } else if (symbol === 'GER40') {
+                basePrice = 18200.00;
+                decimal = 1;
+                volatility = 12.0;
+            } else if (symbol === 'JPN225') {
+                basePrice = 39100.00;
+                decimal = 0;
+                volatility = 50.0;
             } else if (symbol.includes('SOL/USD')) {
                 basePrice = 145.20;
                 decimal = 2;
@@ -433,6 +489,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 basePrice = 0.385;
                 decimal = 4;
                 volatility = 0.0015;
+            } else if (symbol.includes('DOGE/USD')) {
+                basePrice = 0.125;
+                decimal = 5;
+                volatility = 0.002;
+            } else if (symbol.includes('SHIB/USD')) {
+                basePrice = 0.00001750;
+                decimal = 8;
+                volatility = 0.0000003;
+            } else {
+                basePrice = symbol.includes('LTC') ? 78.50 : (symbol.includes('LINK') ? 14.20 : (symbol.includes('DOT') ? 6.10 : 0.58));
+                decimal = 2;
+                volatility = 0.05;
             }
             
             marketAssets[symbol] = {
@@ -759,6 +827,174 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // --- FUNDING PORTAL MODALS CONTROLLERS ---
+    window.openFundingModal = function(tab) {
+        const modal = document.getElementById('modal-funding');
+        if(modal) {
+            modal.classList.add('active');
+            switchFundingTab(tab);
+        }
+    };
+
+    window.closeFundingModal = function() {
+        const modal = document.getElementById('modal-funding');
+        if(modal) {
+            modal.classList.remove('active');
+        }
+    };
+
+    window.switchFundingTab = function(tab) {
+        const btnDeposit = document.getElementById('btnFundingDeposit');
+        const btnWithdraw = document.getElementById('btnFundingWithdraw');
+        const depositSection = document.getElementById('fundingDepositSection');
+        const withdrawSection = document.getElementById('fundingWithdrawSection');
+        const titleBadge = document.getElementById('fundingModalTitle');
+
+        // Reset forms and status text
+        document.getElementById('depositFundsForm').reset();
+        document.getElementById('withdrawFundsForm').reset();
+        document.getElementById('depositUSDConversion').innerText = "Will Credit: $0.00 USD";
+        document.getElementById('withdrawINRConversion').innerText = "Will Receive: ₹0.00 INR";
+        document.getElementById('depositStatusMsg').style.display = "none";
+        document.getElementById('withdrawStatusMsg').style.display = "none";
+
+        if(tab === 'deposit') {
+            btnDeposit.classList.add('active');
+            btnWithdraw.classList.remove('active');
+            depositSection.classList.remove('hidden');
+            withdrawSection.classList.add('hidden');
+            if(titleBadge) {
+                titleBadge.innerText = 'Deposit Capital';
+                titleBadge.style.backgroundColor = 'var(--success-glow)';
+                titleBadge.style.color = 'var(--success)';
+            }
+        } else {
+            btnWithdraw.classList.add('active');
+            btnDeposit.classList.remove('active');
+            withdrawSection.classList.remove('hidden');
+            depositSection.classList.add('hidden');
+            if(titleBadge) {
+                titleBadge.innerText = 'Withdraw Funds';
+                titleBadge.style.backgroundColor = 'var(--accent-glow)';
+                titleBadge.style.color = 'var(--accent)';
+            }
+        }
+    };
+
+    // Live conversion metrics
+    const depositAmountINR = document.getElementById('depositAmountINR');
+    const depositUSDConversion = document.getElementById('depositUSDConversion');
+    if(depositAmountINR && depositUSDConversion) {
+        depositAmountINR.addEventListener('input', () => {
+            const inr = parseFloat(depositAmountINR.value) || 0;
+            const usd = inr / 83.50;
+            depositUSDConversion.innerText = `Will Credit: $${usd.toFixed(2)} USD`;
+        });
+    }
+
+    const withdrawAmountUSD = document.getElementById('withdrawAmountUSD');
+    const withdrawINRConversion = document.getElementById('withdrawINRConversion');
+    if(withdrawAmountUSD && withdrawINRConversion) {
+        withdrawAmountUSD.addEventListener('input', () => {
+            const usd = parseFloat(withdrawAmountUSD.value) || 0;
+            const inr = usd * 83.50;
+            withdrawINRConversion.innerText = `Will Receive: ₹${inr.toFixed(2)} INR`;
+        });
+    }
+
+    // Deposit UPI Verification Simulation
+    const depositFundsForm = document.getElementById('depositFundsForm');
+    if (depositFundsForm) {
+        depositFundsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inrAmount = parseFloat(document.getElementById('depositAmountINR').value) || 0;
+            const utr = document.getElementById('depositUtr').value.trim();
+            const statusBox = document.getElementById('depositStatusMsg');
+            const submitBtn = depositFundsForm.querySelector('button[type="submit"]');
+
+            if (inrAmount <= 0) {
+                alert("Please enter a valid deposit amount.");
+                return;
+            }
+
+            statusBox.style.display = "block";
+            statusBox.style.color = "var(--accent)";
+            statusBox.style.backgroundColor = "rgba(245, 158, 11, 0.1)";
+            statusBox.style.borderColor = "rgba(245, 158, 11, 0.2)";
+            statusBox.innerText = `⚡ Verifying payment status on UPI network (UTR: ${utr})...`;
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                const usdAmount = inrAmount / 83.50;
+                userBalance += usdAmount;
+                localStorage.setItem('userBalance', userBalance);
+                updateBalanceDisplay();
+
+                statusBox.style.color = "var(--success)";
+                statusBox.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+                statusBox.style.borderColor = "rgba(16, 185, 129, 0.2)";
+                statusBox.innerText = `✔ UPI Deposit of ₹${inrAmount.toFixed(2)} ($${usdAmount.toFixed(2)} USD) successfully verified and credited!`;
+                submitBtn.disabled = false;
+                
+                // Clear fields
+                document.getElementById('depositAmountINR').value = '';
+                document.getElementById('depositUtr').value = '';
+                document.getElementById('depositUSDConversion').innerText = "Will Credit: $0.00 USD";
+            }, 2500);
+        });
+    }
+
+    // Payout UPI Request Simulation
+    const withdrawFundsForm = document.getElementById('withdrawFundsForm');
+    if (withdrawFundsForm) {
+        withdrawFundsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const usdAmount = parseFloat(document.getElementById('withdrawAmountUSD').value) || 0;
+            const upiId = document.getElementById('withdrawUpiId').value.trim();
+            const statusBox = document.getElementById('withdrawStatusMsg');
+            const submitBtn = withdrawFundsForm.querySelector('button[type="submit"]');
+
+            if (usdAmount <= 0) {
+                alert("Please enter a valid withdrawal amount.");
+                return;
+            }
+
+            if (usdAmount > userBalance) {
+                statusBox.style.display = "block";
+                statusBox.style.color = "var(--error)";
+                statusBox.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+                statusBox.style.borderColor = "rgba(239, 68, 68, 0.2)";
+                statusBox.innerText = `❌ Error: Insufficient USD balance to execute withdrawal.`;
+                return;
+            }
+
+            statusBox.style.display = "block";
+            statusBox.style.color = "var(--accent)";
+            statusBox.style.backgroundColor = "rgba(245, 158, 11, 0.1)";
+            statusBox.style.borderColor = "rgba(245, 158, 11, 0.2)";
+            statusBox.innerText = `⚡ Processing UPI withdrawal request of $${usdAmount.toFixed(2)} to ${upiId}...`;
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                userBalance -= usdAmount;
+                localStorage.setItem('userBalance', userBalance);
+                updateBalanceDisplay();
+
+                const inrAmount = usdAmount * 83.50;
+                statusBox.style.color = "var(--success)";
+                statusBox.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+                statusBox.style.borderColor = "rgba(16, 185, 129, 0.2)";
+                statusBox.innerText = `✔ Payout of ₹${inrAmount.toFixed(2)} ($${usdAmount.toFixed(2)} USD) successfully initiated to UPI: ${upiId}!`;
+                submitBtn.disabled = false;
+                
+                // Clear fields
+                document.getElementById('withdrawAmountUSD').value = '';
+                document.getElementById('withdrawUpiId').value = '';
+                document.getElementById('withdrawINRConversion').innerText = "Will Receive: ₹0.00 INR";
+            }, 2500);
+        });
+    }
 
     // Run Initial Layout State rendering
     renderApplicationStateView();
