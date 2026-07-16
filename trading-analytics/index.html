@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yogesh - Markets & Trading Analytics</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <link rel="apple-touch-icon" href="logo192.png">
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
@@ -12,7 +15,10 @@
     <!-- 1. AUTHENTICATION GATEWAY -->
     <div id="authGatePage">
         <div class="auth-container">
-            <div class="auth-brand">Yogesh<span>.Markets</span></div>
+            <div class="auth-brand">
+                <img src="logo.png" alt="Logo" class="auth-logo-img">
+                <div>Yogesh<span>.Markets</span></div>
+            </div>
             
             <div class="auth-tabs">
                 <button class="tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">Login</button>
@@ -81,6 +87,21 @@
                     <button type="submit" class="submit-btn" id="registerSubmitBtn" disabled>Complete Signup</button>
                 </form>
             </div>
+            
+            <!-- App download promo in login -->
+            <div class="auth-app-download" style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.6rem;">Take Yogesh Analytics on the go!</div>
+                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                    <a href="trading-analytics.apk" class="download-app-btn" style="flex: 1; justify-content: center;" download>
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; margin-right: 0.5rem;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                        Download APK
+                    </a>
+                    <button class="download-app-btn pwa-install-btn hidden" style="flex: 1; justify-content: center; background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%); border: none; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; margin-right: 0.5rem;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                        Install App
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -89,9 +110,14 @@
     <div id="protectedHomePage">
         <header>
             <nav class="navbar">
-                <div class="logo">Yogesh<span>.Analytics</span></div>
+                <div class="logo">
+                    <img src="logo.png" alt="Logo" class="logo-img">
+                    Yogesh<span>.Analytics</span>
+                </div>
                 <ul class="nav-links">
                     <li><a href="#">Dashboard</a></li>
+                    <li><a href="#beginner-hub">Beginner Academy</a></li>
+                    <li><a href="#trading-library">Trading Library</a></li>
                     <li><a href="#knowledge">Market Knowledge</a></li>
                     <li><a href="javascript:void(0)" class="logout-btn" id="logoutTrigger">Logout</a></li>
                 </ul>
@@ -158,6 +184,16 @@
                         <div class="trade-input-grp">
                             <label for="tradeSize">Position Size (Units)</label>
                             <input type="number" id="tradeSize" value="10" min="1" step="any" required>
+                        </div>
+                        <div class="trade-row" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                            <div class="trade-input-grp" style="flex: 1; margin-bottom: 0;">
+                                <label for="tradeStopLoss">Stop Loss Price</label>
+                                <input type="number" id="tradeStopLoss" placeholder="Optional" step="any">
+                            </div>
+                            <div class="trade-input-grp" style="flex: 1; margin-bottom: 0;">
+                                <label for="tradeTakeProfit">Take Profit Price</label>
+                                <input type="number" id="tradeTakeProfit" placeholder="Optional" step="any">
+                            </div>
                         </div>
                         <button type="submit" class="trade-action-btn" id="tradeSubmitBtn">Place Buy Market Order</button>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; text-align: center;">
@@ -285,6 +321,8 @@
                                     <th>Asset</th>
                                     <th>Size</th>
                                     <th>Entry Price</th>
+                                    <th>Stop Loss</th>
+                                    <th>Take Profit</th>
                                     <th>Current Price</th>
                                     <th>Unrealised P&L</th>
                                     <th>Action</th>
@@ -299,6 +337,166 @@
 
             </div>
 
+        </div>
+
+        <!-- Beginner Trading Academy Section -->
+        <main class="beginner-hub-container" id="beginner-hub" style="padding: 4rem 5%; max-width: 1400px; margin: 0 auto;">
+            <h2 class="section-title">Beginner Trading Academy</h2>
+            
+            <div class="grid" style="margin-bottom: 3rem;">
+                
+                <!-- Left Card: Interactive Academy Quiz -->
+                <div class="card quiz-card">
+                    <div class="card-content">
+                        <div class="card-badge">Interactive Quiz</div>
+                        <h3 class="card-title">Trading Knowledge Test</h3>
+                        <p class="card-desc" id="quizWelcomeDesc" style="margin-bottom: 1.5rem;">Test your understanding of currency pairs, blockchain technology, and risk leverage. Pass with at least 4/5 correct to earn <strong style="color: var(--accent);">+30 Credits</strong>!</p>
+                        
+                        <div id="quizPlayArea" class="hidden" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div class="quiz-progress" id="quizProgress" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 700;">Question 1 of 5</div>
+                            <div class="quiz-question" id="quizQuestionText" style="font-size: 1.15rem; font-family: var(--font-heading); font-weight: 600; color: var(--text-primary); min-height: 48px;">What is leverage?</div>
+                            <div class="quiz-options-grid" id="quizOptions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <!-- Dynamic buttons will go here -->
+                            </div>
+                        </div>
+                        
+                        <div id="quizResultArea" class="hidden" style="text-align: center; padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                            <h4 id="quizResultTitle" style="font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--success);">Quiz Completed!</h4>
+                            <p id="quizResultText" style="color: var(--text-secondary); font-size: 0.95rem;"></p>
+                            <button id="quizRetryBtn" class="action-btn" style="background-color: var(--primary); border-color: var(--primary); margin-top: 1rem; padding: 0.5rem 1.2rem;">Retry Quiz</button>
+                        </div>
+                        
+                        <button id="quizStartBtn" class="trade-action-btn" style="margin-top: auto;">Start Quiz</button>
+                    </div>
+                </div>
+
+                <!-- Right Card: Trading Plan Builder -->
+                <div class="card plan-card">
+                    <div class="card-content">
+                        <div class="card-badge crypto">Plan Builder</div>
+                        <h3 class="card-title">Simulated Trading Plan Builder</h3>
+                        <p class="card-desc" style="margin-bottom: 1.5rem;">Construct a structured, disciplined layout of your trade execution rules. Statistical planning protects drawdowns in volatile setups.</p>
+                        
+                        <form id="planBuilderForm" style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.5rem;">
+                            <div class="trade-row" style="display: flex; gap: 0.75rem;">
+                                <div class="trade-input-grp" style="flex: 1; margin-bottom: 0;">
+                                    <label for="planStyle">Trading Style</label>
+                                    <select id="planStyle" style="width:100%; padding:0.5rem; background:var(--bg-light-dark); color:var(--text-primary); border:1px solid var(--border-color); border-radius:6px;">
+                                        <option value="Day Trading">Day Trading</option>
+                                        <option value="Swing Trading">Swing Trading</option>
+                                        <option value="Position Trading">Position Trading</option>
+                                        <option value="Scalping">Scalping</option>
+                                    </select>
+                                </div>
+                                <div class="trade-input-grp" style="flex: 1; margin-bottom: 0;">
+                                    <label for="planRisk">Risk Per Trade (%)</label>
+                                    <input type="number" id="planRisk" value="1.0" min="0.1" max="5.0" step="0.1" style="width:100%; padding:0.5rem; background:var(--bg-light-dark); color:var(--text-primary); border:1px solid var(--border-color); border-radius:6px;">
+                                </div>
+                            </div>
+                            <div class="trade-input-grp" style="margin-bottom: 0;">
+                                <label for="planTarget">Monthly Target Profit (%)</label>
+                                <input type="number" id="planTarget" value="10" min="1" max="100" style="width:100%; padding:0.5rem; background:var(--bg-light-dark); color:var(--text-primary); border:1px solid var(--border-color); border-radius:6px;">
+                            </div>
+                            <div class="trade-input-grp" style="margin-bottom: 0;">
+                                <label for="planRule">My Golden Rule</label>
+                                <input type="text" id="planRule" placeholder="e.g. Stop trading after 2 losses" required style="width:100%; padding:0.5rem; background:var(--bg-light-dark); color:var(--text-primary); border:1px solid var(--border-color); border-radius:6px;">
+                            </div>
+                            <button type="submit" class="trade-action-btn" style="background: linear-gradient(135deg, var(--success) 0%, #047857 100%); margin-top: 0.5rem;">Generate Plan</button>
+                        </form>
+                        
+                        <div id="planOutputCard" class="hidden" style="padding: 1.25rem; background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--success); border-radius: 12px; margin-top: auto;">
+                            <!-- Dynamic plan details -->
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Lower Row: Glossary with Search -->
+            <div class="glossary-section" style="margin-top: 4rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); padding: 3rem; border-radius: 20px;">
+                <h3 class="card-title" style="text-align: center; font-size: 1.8rem; margin-bottom: 1.5rem; font-family: var(--font-heading);">Trading Glossary for Beginners</h3>
+                <div style="max-width: 600px; margin: 0 auto 2.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+                    <input type="text" id="glossarySearch" placeholder="Search trading terms... (e.g. Leverage, Pip, Margin, Short)" style="width: 100%; padding: 0.8rem 1.2rem; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 10px; font-size: 1rem; outline: none; transition: border-color var(--transition-fast);">
+                    <div class="glossary-filters" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem;">
+                        <button class="action-btn active" data-category="all" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: var(--bg-light-dark); border-color: var(--border-color);">All Terms</button>
+                        <button class="action-btn" data-category="basics" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: var(--bg-light-dark); border-color: var(--border-color);">Basics</button>
+                        <button class="action-btn" data-category="risk" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: var(--bg-light-dark); border-color: var(--border-color);">Risk & Margin</button>
+                        <button class="action-btn" data-category="analysis" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: var(--bg-light-dark); border-color: var(--border-color);">Analysis</button>
+                    </div>
+                </div>
+                
+                <div class="grid" id="glossaryGrid">
+                    <!-- Dynamic glossary items will be listed here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Trading Library Section -->
+        <main class="beginner-hub-container" id="trading-library" style="padding: 4rem 5%; max-width: 1400px; margin: 0 auto; border-top: 1px solid var(--border-color);">
+            <h2 class="section-title">Trader's Reference Library</h2>
+            
+            <!-- Library Header: Progress bar -->
+            <div class="card" style="margin-bottom: 3rem; padding: 2rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); border-radius: 16px; width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                        📚 <span>My Reading Progress</span>
+                    </div>
+                    <div id="libraryProgressText" style="font-size: 0.95rem; font-weight: 700; color: var(--success);">
+                        0 of 4 Books Completed (0%)
+                    </div>
+                </div>
+                <!-- Progress bar track -->
+                <div style="background: var(--bg-light-dark); height: 10px; border-radius: 5px; width: 100%; overflow: hidden; border: 1px solid var(--border-color);">
+                    <div id="libraryProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%); transition: width 0.4s ease;"></div>
+                </div>
+            </div>
+
+            <!-- Library Grid -->
+            <div class="grid" id="libraryGrid">
+                <!-- Dynamically populated books -->
+            </div>
+        </main>
+
+        <!-- Book Details & Interaction Drawer Modal -->
+        <div class="modal-overlay" id="modal-book-details">
+            <div class="modal-content" style="max-width: 700px; max-height: 90vh;">
+                <button class="modal-close-btn" onclick="closeBookModal()">&times;</button>
+                <div class="modal-body" id="bookModalBody">
+                    <!-- Dynamic details, rating widget, notes area, and quiz -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Unlock/Purchase Modal -->
+        <div class="modal-overlay" id="modal-book-purchase">
+            <div class="modal-content" style="max-width: 460px;">
+                <button class="modal-close-btn" onclick="closeBookPurchaseModal()">&times;</button>
+                <div class="modal-body">
+                    <span class="card-badge" style="background-color: var(--accent-glow); color: var(--accent);">Unlock Premium Guide</span>
+                    <h3 style="margin-top:0.75rem; font-family: var(--font-heading);" id="purchaseBookTitle">Unlock Trading Reference</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                        Scan the UPI QR code below, pay exactly <strong>₹29.00 INR</strong>, and enter your 12-digit transaction UTR to unlock this complete guide.
+                    </p>
+                    
+                    <div style="display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.25); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+                        <img src="qr_scanner.jpg" alt="UPI Scanner QR Code" style="width: 180px; height: auto; border-radius: 8px; margin-bottom: 0.75rem; border: 3px solid white;">
+                        <div style="font-family: monospace; font-size: 0.85rem; color: var(--text-primary); text-align: center;">
+                            <div>UPI ID: <strong style="color: var(--accent);">7483658029@ybl</strong></div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem;">Account Name: Yogesh Reddy</div>
+                        </div>
+                    </div>
+                    
+                    <form id="purchaseBookForm">
+                        <input type="hidden" id="purchaseBookId">
+                        <div class="form-group">
+                            <label for="purchaseUtr">UPI Transaction ID / Ref No (12 Digits)</label>
+                            <input type="text" id="purchaseUtr" placeholder="Enter 12-digit UTR/Txn ID" required pattern="\d{12}" title="Please enter a valid 12-digit UPI transaction number">
+                        </div>
+                        <div class="hint-text" id="purchaseStatusMsg" style="margin-bottom: 1rem; display: none;"></div>
+                        <button type="submit" class="submit-btn" style="margin-top: 0.5rem; background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%);">Confirm UPI Payment (₹29.00)</button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <!-- Static Knowledge grid containing basic definitions -->
@@ -364,6 +562,22 @@
         </main>
 
         <footer>
+            <div class="download-app-banner">
+                <div class="download-app-info">
+                    <div class="download-app-title">Yogesh Analytics Mobile App</div>
+                    <div class="download-app-subtitle">Get real-time market insights directly on your mobile device</div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <a href="trading-analytics.apk" class="download-app-btn" download>
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; margin-right: 0.5rem;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                        Download APK
+                    </a>
+                    <button class="download-app-btn pwa-install-btn hidden" style="background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%); border: none; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; margin-right: 0.5rem;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                        Install App
+                    </button>
+                </div>
+            </div>
             <p>&copy; 2026 Yogesh Financial Analytics. All Rights Reserved.</p>
         </footer>
     </div>
@@ -509,6 +723,7 @@
         </div>
     </div>
 
+    <div id="toast-container" class="toast-container"></div>
     <script src="app.js"></script>
 </body>
 </html>

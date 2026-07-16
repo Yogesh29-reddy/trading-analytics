@@ -2,6 +2,40 @@
 // PORTFOLIO & TRADING ANALYTICS APPLICATION
 // ==========================================
 
+// Register Service Worker for installable PWA support in Google Chrome and other browsers
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+            .catch(err => console.error('Service Worker registration failed:', err));
+    });
+}
+
+// PWA custom install prompt behavior for Google Chrome and all compatible browsers
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtns = document.querySelectorAll('.pwa-install-btn');
+    installBtns.forEach(btn => {
+        btn.classList.remove('hidden');
+        btn.onclick = () => {
+            installBtns.forEach(b => b.classList.add('hidden'));
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User installed the web application');
+                }
+                deferredPrompt = null;
+            });
+        };
+    });
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('Trading Analytics PWA was installed successfully.');
+});
+
 // Global state variables
 let generatedOtpCode = null;
 let currentSymbol = 'BTC/USD';
@@ -26,6 +60,43 @@ let defaultAccounts = [
 
 // DOM Elements cache
 document.addEventListener('DOMContentLoaded', () => {
+    // Custom Toast Notification System
+    window.showToast = function(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        else if (type === 'error') icon = '❌';
+        else if (type === 'warning') icon = '⚠️';
+
+        toast.innerHTML = `
+            <div style="font-size: 1.2rem; line-height: 1;">${icon}</div>
+            <div class="toast-content">${message}</div>
+            <div class="toast-close">&times;</div>
+        `;
+
+        container.appendChild(toast);
+
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        });
+
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4000);
+    };
+
     // Auth screens elements
     const authGatePage = document.getElementById('authGatePage');
     const protectedHomePage = document.getElementById('protectedHomePage');
@@ -87,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userName = regName.value.trim() || "Valued User";
 
             if (!userEmail || !regContact.checkValidity()) {
-                alert("Please declare a valid Email Address first.");
+                showToast("Please declare a valid Email Address first.", "warning");
                 regContact.focus();
                 return;
             }
@@ -166,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert("Registration Complete! Credentials stored directly in the project directory (credentials.json).");
+                        showToast("Registration Complete! Credentials stored directly in the project directory (credentials.json).", "success");
                     } else {
                         triggerFallbackDownload(credentialData, "Server error writing credentials database.");
                     }
@@ -186,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.appendChild(downloadAnchor);
                 downloadAnchor.click();
                 downloadAnchor.remove();
-                alert(message + "\n\nA backup 'credentials.json' has been downloaded to your system.");
+                showToast(message + " A backup 'credentials.json' has been downloaded.", "warning");
             }
 
             function proceedToLogin() {
@@ -253,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         loginErrorBox.innerText = "❌ Access Denied: Wrong password or invalid credentials.";
                         loginErrorBox.style.display = "block";
                     } else {
-                        alert("Access Denied: Invalid credentials.");
+                        showToast("Access Denied: Invalid credentials.", "error");
                     }
                 }
             }
@@ -334,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userCredits += 50;
             localStorage.setItem('userCredits', userCredits);
             updateCreditsDisplay();
-            alert("Payment successful! 50 Credits have been loaded into your account.");
+            showToast("Payment successful! 50 Credits have been loaded into your account.", "success");
         });
     }
 
@@ -770,13 +841,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const sizeInput = parseFloat(document.getElementById('tradeSize').value) || 0;
             const entryPrice = parseFloat(marketAssets[selectPair].price);
 
+            const slValue = parseFloat(document.getElementById('tradeStopLoss').value) || null;
+            const tpValue = parseFloat(document.getElementById('tradeTakeProfit').value) || null;
+
             if (sizeInput <= 0) {
-                alert("Please enter a valid order size.");
+                showToast("Please enter a valid order size.", "warning");
                 return;
             }
 
             if (userCredits <= 0) {
-                alert("Insufficient Credits! Please buy credits before placing live simulated trades.");
+                showToast("Insufficient Credits! Please buy credits before placing live simulated trades.", "error");
                 return;
             }
 
@@ -791,6 +865,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 size: sizeInput,
                 entryPrice: entryPrice,
                 currentPrice: entryPrice,
+                stopLoss: slValue,
+                takeProfit: tpValue,
                 pnl: 0,
                 time: new Date().toLocaleTimeString()
             };
@@ -799,7 +875,11 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('activeTrades', JSON.stringify(activeTrades));
 
             renderTradesTable();
-            alert(`Simulated order placed successfully! Placed ${tradeDirection} for ${sizeInput} units of ${selectPair}. (Deducted 2 Credits)`);
+            showToast(`Simulated ${tradeDirection} order placed successfully for ${sizeInput} units of ${selectPair}. (Deducted 2 Credits)`, "success");
+
+            // Clear SL/TP inputs
+            document.getElementById('tradeStopLoss').value = '';
+            document.getElementById('tradeTakeProfit').value = '';
         });
     }
 
@@ -812,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeTrades.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="8">
+                    <td colspan="10">
                         <div class="empty-state">No active simulated trades. Place an order on the left panel!</div>
                     </td>
                 </tr>
@@ -828,12 +908,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const pnlClass = trade.pnl >= 0 ? 'positive' : 'negative';
             const sign = trade.pnl >= 0 ? '+' : '';
 
+            const slText = (trade.stopLoss !== null && trade.stopLoss !== undefined) ? trade.stopLoss.toFixed(asset.decimal) : '<span style="color: var(--text-muted);">None</span>';
+            const tpText = (trade.takeProfit !== null && trade.takeProfit !== undefined) ? trade.takeProfit.toFixed(asset.decimal) : '<span style="color: var(--text-muted);">None</span>';
+
             tr.innerHTML = `
                 <td><strong>${trade.id}</strong></td>
                 <td><span class="type-badge ${trade.type.toLowerCase()}">${trade.type}</span></td>
                 <td><strong>${trade.symbol}</strong></td>
                 <td>${trade.size.toLocaleString()}</td>
                 <td>${trade.entryPrice.toFixed(asset.decimal)}</td>
+                <td>${slText}</td>
+                <td>${tpText}</td>
                 <td id="row-price-${trade.id}">${trade.currentPrice.toFixed(asset.decimal)}</td>
                 <td class="pnl-value ${pnlClass}" id="row-pnl-${trade.id}">${sign}$${trade.pnl.toFixed(2)}</td>
                 <td>
@@ -844,8 +929,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function autoCloseTradePosition(tradeId, reason) {
+        const tradeIndex = activeTrades.findIndex(t => t.id === tradeId);
+        if (tradeIndex === -1) return;
+
+        const trade = activeTrades[tradeIndex];
+        userBalance += trade.pnl;
+        localStorage.setItem('userBalance', userBalance);
+        updateBalanceDisplay();
+
+        activeTrades.splice(tradeIndex, 1);
+        localStorage.setItem('activeTrades', JSON.stringify(activeTrades));
+
+        renderTradesTable();
+
+        const pnlText = trade.pnl >= 0 ? `+$${trade.pnl.toFixed(2)}` : `-$${Math.abs(trade.pnl).toFixed(2)}`;
+        showToast(`💥 Position ${tradeId} Closed via ${reason}! PnL: ${pnlText}`, trade.pnl >= 0 ? "success" : "error");
+    }
+
     function updateActiveTradesPnL() {
         if (activeTrades.length === 0) return;
+
+        let tradesToClose = [];
 
         activeTrades.forEach(trade => {
             const asset = marketAssets[trade.symbol];
@@ -860,6 +965,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             trade.pnl = pnl;
 
+            // Check Stop Loss
+            if (trade.stopLoss !== null && trade.stopLoss !== undefined) {
+                if (trade.type === 'BUY' && trade.currentPrice <= trade.stopLoss) {
+                    tradesToClose.push({ id: trade.id, reason: 'Stop Loss Hit' });
+                } else if (trade.type === 'SELL' && trade.currentPrice >= trade.stopLoss) {
+                    tradesToClose.push({ id: trade.id, reason: 'Stop Loss Hit' });
+                }
+            }
+
+            // Check Take Profit
+            if (trade.takeProfit !== null && trade.takeProfit !== undefined) {
+                if (trade.type === 'BUY' && trade.currentPrice >= trade.takeProfit) {
+                    tradesToClose.push({ id: trade.id, reason: 'Take Profit Hit' });
+                } else if (trade.type === 'SELL' && trade.currentPrice <= trade.takeProfit) {
+                    tradesToClose.push({ id: trade.id, reason: 'Take Profit Hit' });
+                }
+            }
+
             const rowPrice = document.getElementById(`row-price-${trade.id}`);
             const rowPnl = document.getElementById(`row-pnl-${trade.id}`);
 
@@ -872,6 +995,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         localStorage.setItem('activeTrades', JSON.stringify(activeTrades));
+
+        // Execute auto closures after iteration to avoid index splicing issues
+        tradesToClose.forEach(item => {
+            autoCloseTradePosition(item.id, item.reason);
+        });
     }
 
     window.closeTradePosition = function (tradeId) {
@@ -890,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTradesTable();
 
         const pnlText = trade.pnl >= 0 ? `Profit of $${trade.pnl.toFixed(2)}` : `Loss of $${Math.abs(trade.pnl).toFixed(2)}`;
-        alert(`Position Closed! Realised PnL: ${pnlText}. Current Balance: $${userBalance.toFixed(2)}`);
+        showToast(`Position Closed! Realised PnL: ${pnlText}.`, "info");
     };
 
     // --- MARKET KNOWLEDGE MODALS ---
@@ -1084,6 +1212,813 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2500);
         });
     }
+
+    // ==========================================
+    // BEGINNER TRADING ACADEMY LOGIC
+    // ==========================================
+
+    const glossaryTerms = [
+        { term: "Leverage", category: "risk", description: "Borrowing capital to increase trade sizes. Magnifies both gains and losses.", formula: "Position Size / Account Margin" },
+        { term: "Pip", category: "basics", description: "Percentage in Point. The smallest price movement in currency pairs (0.0001 for EUR/USD).", formula: "0.0001 (for 4-decimal currency pairs)" },
+        { term: "Spread", category: "basics", description: "The difference between the Bid (selling) price and Ask (buying) price of an asset.", formula: "Ask Price - Bid Price" },
+        { term: "Stop Loss (SL)", category: "risk", description: "An order placed to automatically close a trade at a set price if the market goes against you, preventing deep losses.", formula: "Strict maximum 1% risk per trade is recommended" },
+        { term: "Take Profit (TP)", category: "risk", description: "An order placed to automatically close a trade at a set price target to lock in profits.", formula: "Target reward should be >= 2x Stop Loss size" },
+        { term: "Bull & Bear Markets", category: "analysis", description: "Bull markets represent rising asset prices, whereas Bear markets represent falling asset prices.", formula: "Bullish = Demand dominates; Bearish = Supply dominates" },
+        { term: "Long vs Short Positions", category: "basics", description: "Going 'Long' means buying hoping the asset goes up. Going 'Short' means selling hoping it goes down.", formula: "Long = Buy now, sell later; Short = Sell now, buy back later" },
+        { term: "Margin Call", category: "risk", description: "A warning triggered when your account balance drops below the broker's minimum margin requirement, risking forced liquidation.", formula: "Triggered if Equity < Used Margin" }
+    ];
+
+    function renderGlossary(filter = 'all', searchQuery = '') {
+        const grid = document.getElementById('glossaryGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        const filtered = glossaryTerms.filter(item => {
+            const matchesCategory = filter === 'all' || item.category === filter;
+            const matchesSearch = item.term.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                  item.description.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No matching terms found. Try searching for "Margin" or "Pip".</div>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'glossary-card';
+            card.innerHTML = `
+                <span class="card-badge ${item.category === 'risk' ? 'risk' : (item.category === 'analysis' ? 'crypto' : '')}" style="font-size:0.65rem; padding:0.15rem 0.5rem; margin-bottom:0.75rem;">${item.category.toUpperCase()}</span>
+                <h4 class="card-title" style="font-size: 1.15rem; margin-bottom: 0.5rem;">${item.term}</h4>
+                <p class="card-desc" style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--text-secondary);">${item.description}</p>
+                <div style="font-size: 0.75rem; font-family: monospace; color: var(--accent); padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                    Formula/Tip: ${item.formula}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    const searchInput = document.getElementById('glossarySearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const activeFilterBtn = document.querySelector('.glossary-filters .action-btn.active');
+            const filter = activeFilterBtn ? activeFilterBtn.dataset.category : 'all';
+            renderGlossary(filter, e.target.value);
+        });
+    }
+
+    const filterBtns = document.querySelectorAll('.glossary-filters .action-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.category;
+            const query = searchInput ? searchInput.value : '';
+            renderGlossary(filter, query);
+        });
+    });
+
+    // Interactive Quiz System
+    const quizQuestions = [
+        {
+            question: "What does going 'Short' on Bitcoin (BTC/USD) mean?",
+            options: [
+                "Holding Bitcoin in a cold wallet for a short period of time.",
+                "Selling Bitcoin hoping its price will decrease, so you can buy it back cheaper.",
+                "Buying a small fraction of a Bitcoin.",
+                "Leveraging your account balance to buy twice as much Bitcoin."
+            ],
+            answer: 1
+        },
+        {
+            question: "If your account balance is $10,000 and you risk 1% on a trade, how much capital are you risking?",
+            options: [
+                "$10.00",
+                "$1,000.00",
+                "$100.00",
+                "$50.00"
+            ],
+            answer: 2
+        },
+        {
+            question: "What is the primary risk of using high leverage in trading?",
+            options: [
+                "It slows down trade execution speed.",
+                "It increases transaction spreads charged by the broker.",
+                "It reduces potential profit margins.",
+                "It magnifies losses, which can trigger a Margin Call and wipe out your account."
+            ],
+            answer: 3
+        },
+        {
+            question: "Which order type is designed to limit your loss if a trade goes against you?",
+            options: [
+                "Market Order",
+                "Stop Loss Order",
+                "Take Profit Order",
+                "Limit Order"
+            ],
+            answer: 1
+        },
+        {
+            question: "What represents a 'Spread' in financial markets?",
+            options: [
+                "The difference between buying (Ask) and selling (Bid) price.",
+                "The amount of leverage allocated to a single asset trade.",
+                "The growth of trade positions over consecutive winning days.",
+                "The total daily trading volume across all global exchanges."
+            ],
+            answer: 0
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let quizScore = 0;
+
+    const quizStartBtn = document.getElementById('quizStartBtn');
+    const quizPlayArea = document.getElementById('quizPlayArea');
+    const quizResultArea = document.getElementById('quizResultArea');
+    const quizWelcomeDesc = document.getElementById('quizWelcomeDesc');
+    const quizProgress = document.getElementById('quizProgress');
+    const quizQuestionText = document.getElementById('quizQuestionText');
+    const quizOptions = document.getElementById('quizOptions');
+    const quizRetryBtn = document.getElementById('quizRetryBtn');
+
+    if (quizStartBtn) {
+        quizStartBtn.addEventListener('click', () => {
+            quizStartBtn.classList.add('hidden');
+            quizWelcomeDesc.classList.add('hidden');
+            quizPlayArea.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            loadQuizQuestion();
+        });
+    }
+
+    function loadQuizQuestion() {
+        if (currentQuestionIndex >= quizQuestions.length) {
+            showQuizResults();
+            return;
+        }
+
+        const q = quizQuestions[currentQuestionIndex];
+        if (quizProgress) quizProgress.innerText = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+        if (quizQuestionText) quizQuestionText.innerText = q.question;
+
+        if (quizOptions) {
+            quizOptions.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-opt-btn';
+                btn.innerText = opt;
+                btn.addEventListener('click', () => handleQuizAnswerSelection(idx));
+                quizOptions.appendChild(btn);
+            });
+        }
+    }
+
+    function handleQuizAnswerSelection(selectedIndex) {
+        const q = quizQuestions[currentQuestionIndex];
+        const optionBtns = quizOptions.querySelectorAll('.quiz-opt-btn');
+
+        // Disable all buttons immediately to prevent multiple clicks
+        optionBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === q.answer) {
+            optionBtns[selectedIndex].classList.add('correct');
+            quizScore++;
+            showToast("Correct answer! Keep it up.", "success");
+        } else {
+            optionBtns[selectedIndex].classList.add('wrong');
+            optionBtns[q.answer].classList.add('correct');
+            showToast("Wrong answer. Review the glossary to learn more!", "error");
+        }
+
+        // Wait 1.8 seconds, then load next question
+        setTimeout(() => {
+            currentQuestionIndex++;
+            loadQuizQuestion();
+        }, 1800);
+    }
+
+    function showQuizResults() {
+        quizPlayArea.classList.add('hidden');
+        quizResultArea.classList.remove('hidden');
+
+        const resultTitle = document.getElementById('quizResultTitle');
+        const resultText = document.getElementById('quizResultText');
+
+        const passed = quizScore >= 4;
+        if (passed) {
+            if (resultTitle) {
+                resultTitle.innerText = "Congratulations! You Passed! 🎉";
+                resultTitle.style.color = "var(--success)";
+            }
+            if (resultText) resultText.innerHTML = `You scored <strong>${quizScore}/${quizQuestions.length}</strong> correct. We have credited <strong>+30 Credits</strong> to your account!`;
+
+            // Credit reward
+            userCredits += 30;
+            localStorage.setItem('userCredits', userCredits);
+            updateCreditsDisplay();
+            showToast("Passed! +30 simulated credits have been credited to your account.", "success");
+        } else {
+            if (resultTitle) {
+                resultTitle.innerText = "Study Harder! 📚";
+                resultTitle.style.color = "var(--error)";
+            }
+            if (resultText) resultText.innerHTML = `You scored <strong>${quizScore}/${quizQuestions.length}</strong>. You need at least 4 correct to pass and earn rewards. Read our guides and try again!`;
+        }
+    }
+
+    if (quizRetryBtn) {
+        quizRetryBtn.addEventListener('click', () => {
+            quizResultArea.classList.add('hidden');
+            quizPlayArea.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            loadQuizQuestion();
+        });
+    }
+
+    // Trading Plan Builder Logic
+    const planBuilderForm = document.getElementById('planBuilderForm');
+    const planOutputCard = document.getElementById('planOutputCard');
+
+    if (planBuilderForm) {
+        planBuilderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const style = document.getElementById('planStyle').value;
+            const risk = document.getElementById('planRisk').value;
+            const target = document.getElementById('planTarget').value;
+            const rule = document.getElementById('planRule').value.trim();
+
+            const plan = { style, risk, target, rule, timestamp: new Date().toLocaleDateString() };
+            localStorage.setItem('userTradingPlan', JSON.stringify(plan));
+
+            renderSavedTradingPlan(plan);
+            showToast("Trading plan saved successfully!", "success");
+        });
+    }
+
+    function renderSavedTradingPlan(plan) {
+        if (!planOutputCard) return;
+
+        planOutputCard.innerHTML = `
+            <h4 style="font-family: var(--font-heading); color: var(--success); font-size: 1.1rem; margin-bottom: 0.75rem;">Disciplined Trading Plan</h4>
+            <div class="plan-detail-row">
+                <span class="plan-detail-label">Strategy Style:</span>
+                <span class="plan-detail-value" style="color: var(--text-primary);">${plan.style}</span>
+            </div>
+            <div class="plan-detail-row">
+                <span class="plan-detail-label">Risk Position Limit:</span>
+                <span class="plan-detail-value">${plan.risk}% Risk</span>
+            </div>
+            <div class="plan-detail-row">
+                <span class="plan-detail-label">Monthly Target:</span>
+                <span class="plan-detail-value" style="color: var(--primary);">${plan.target}% Target</span>
+            </div>
+            <div class="plan-detail-row" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+                <span class="plan-detail-label">Golden Rule:</span>
+                <span style="font-style: italic; color: var(--accent); font-size: 0.85rem;">"${plan.rule}"</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-align: right; margin-top: 0.5rem;">
+                Created: ${plan.timestamp}
+            </div>
+        `;
+        planOutputCard.classList.remove('hidden');
+    }
+
+    function loadSavedTradingPlan() {
+        const planStr = localStorage.getItem('userTradingPlan');
+        if (planStr) {
+            try {
+                const plan = JSON.parse(planStr);
+                renderSavedTradingPlan(plan);
+
+                // Pre-fill form fields
+                if (document.getElementById('planStyle')) document.getElementById('planStyle').value = plan.style;
+                if (document.getElementById('planRisk')) document.getElementById('planRisk').value = plan.risk;
+                if (document.getElementById('planTarget')) document.getElementById('planTarget').value = plan.target;
+                if (document.getElementById('planRule')) document.getElementById('planRule').value = plan.rule;
+            } catch (e) {
+                console.error("Error parsing saved trading plan:", e);
+            }
+        }
+    }
+
+    // ==========================================
+    // TRADING LIBRARY SYSTEM
+    // ==========================================
+
+    const tradingBooks = [
+        {
+            id: "book-zone",
+            title: "Trading in the Zone",
+            author: "Mark Douglas",
+            coverClass: "cover-blue",
+            description: "The definitive guide to understanding trading psychology, managing emotional drawdowns, and thinking in probabilities.",
+            takeaways: [
+                "Market moves are random and independent events; you don't need to know what will happen next to make money.",
+                "An 'edge' is nothing more than an indication of a higher probability of one thing happening over another.",
+                "Trading errors are born from fear (fear of losing, fear of being wrong, fear of missing out).",
+                "Accept the risk completely. If you do, you will not experience fear or make trading errors."
+            ],
+            quiz: [
+                {
+                    question: "What is an 'edge' in trading according to Mark Douglas?",
+                    options: [
+                        "A secret indicator combination that guarantees success.",
+                        "An indication of a higher probability of one thing happening over another.",
+                        "Information about institutional block orders.",
+                        "The exact top or bottom price level of a trend."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "Which emotional state causes the majority of trading execution errors?",
+                    options: [
+                        "Over-excitement",
+                        "Calm neutrality",
+                        "Fear",
+                        "Impatience"
+                    ],
+                    answer: 2
+                },
+                {
+                    question: "How should a trader view consecutive trades?",
+                    options: [
+                        "As independent, probabilistic events that do not influence each other.",
+                        "As directly linked patterns where a loss increases win probability next.",
+                        "As predictable paths determined by the previous hour's trend.",
+                        "As random actions with no statistical expectancy."
+                    ],
+                    answer: 0
+                }
+            ]
+        },
+        {
+            id: "book-operator",
+            title: "Reminiscences of a Stock Operator",
+            author: "Edwin Lefèvre",
+            coverClass: "cover-red",
+            description: "A thinly-veiled biography of Jesse Livermore, offering timeless wisdom on market speculation, trend following, and patience.",
+            takeaways: [
+                "The big money is not in individual fluctuations, but in main movements—forest assessment rather than individual tree spotting.",
+                "Markets are never wrong; opinions of traders often are.",
+                "Never buy an asset simply because it has had a big decline from its previous high, and never sell because it seems high.",
+                "Speculation is as old as the hills; whatever happens in the stock market today has happened before and will happen again."
+            ],
+            quiz: [
+                {
+                    question: "Where is the 'big money' made according to Jesse Livermore?",
+                    options: [
+                        "In daily scalping fluctuations.",
+                        "In trading high leverage on penny stocks.",
+                        "In catching the major long-term trend movements.",
+                        "In trading earnings announcements."
+                    ],
+                    answer: 2
+                },
+                {
+                    question: "What is Livermore's golden rule when a market behaves unexpectedly?",
+                    options: [
+                        "Double down on the position to improve average entry price.",
+                        "Acknowledge that opinions can be wrong; close positions and sit tight.",
+                        "Assume the market is manipulated and complain to the broker.",
+                        "Hold the position long-term until it breaks even."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "Why does technical speculation repeat itself over time?",
+                    options: [
+                        "Because algorithms control order execution.",
+                        "Because human nature doesn't change, driving similar fear/greed cycles.",
+                        "Because central banks manipulate interest rates on a cycle.",
+                        "Because market makers trigger stop losses on similar dates."
+                    ],
+                    answer: 1
+                }
+            ]
+        },
+        {
+            id: "book-wizards",
+            title: "Market Wizards",
+            author: "Jack D. Schwager",
+            coverClass: "cover-purple",
+            description: "Interviews with legendary traders revealing their methods, risk controls, and mental setups for consistent market outperformance.",
+            takeaways: [
+                "Risk control is the single most important common denominator among all successful traders.",
+                "You must have a personalized methodology that fits your unique personality; copying others is futile.",
+                "Don't lose capital; protect your stake first and gains will compound.",
+                "Be willing to take a loss quickly. Invalidation points must be clear before order entry."
+            ],
+            quiz: [
+                {
+                    question: "What is the single most important common denominator of the Market Wizards?",
+                    options: [
+                        "Extremely high mathematical intelligence.",
+                        "Strict risk management and capital preservation.",
+                        "Entering orders directly at central bank desks.",
+                        "Using complex artificial intelligence trading systems."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "How should a trader select their trading methodology?",
+                    options: [
+                        "Copy the most profitable system found online.",
+                        "Develop a personalized method that matches their psychology.",
+                        "Follow expert recommendations on financial news networks.",
+                        "Choose the system with the highest leverage settings."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "When should the invalidation (Stop Loss) point of a trade be decided?",
+                    options: [
+                        "After the position drops by at least 5%.",
+                        "At the end of the trading week during review.",
+                        "Before placing the order.",
+                        "Only if the broker sends a margin warning."
+                    ],
+                    answer: 2
+                }
+            ]
+        },
+        {
+            id: "book-murphy",
+            title: "Technical Analysis",
+            author: "John J. Murphy",
+            coverClass: "cover-green",
+            description: "The bible of technical analysis, laying out trend lines, chart patterns, oscillators, volume analysis, and indicator setups.",
+            takeaways: [
+                "Market action discounts everything—fundamentals, politics, and expectations are reflected in price.",
+                "Prices move in trends, and a trend is more likely to continue than to reverse.",
+                "History repeats itself; chart patterns reveal visual footprints of crowd psychology.",
+                "Volume must confirm the trend; volume should expand in the direction of the dominant trend."
+            ],
+            quiz: [
+                {
+                    question: "What is the core premise of Technical Analysis?",
+                    options: [
+                        "Price movements are entirely random and unpredictable.",
+                        "All market variables and sentiment are discounted and reflected in price.",
+                        "Corporate earnings balance sheets determine daily stock trends.",
+                        "Central bank interest decisions are the only tradeable signals."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "According to Murphy, a trend is statistically more likely to...",
+                    options: [
+                        "Reverse immediately upon hitting support or resistance.",
+                        "Continue rather than reverse.",
+                        "Consolidate in a sideways range forever.",
+                        "Accelerate by 50% every week."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "What role should volume play in trend confirmation?",
+                    options: [
+                        "Volume should decrease as price trends up.",
+                        "Volume is irrelevant in modern digital token markets.",
+                        "Volume must expand in the direction of the dominant trend.",
+                        "Volume should peak only at weekend bank closures."
+                    ],
+                    answer: 2
+                }
+            ]
+        }
+    ];
+
+    function renderLibrary() {
+        const grid = document.getElementById('libraryGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        const statuses = JSON.parse(localStorage.getItem('bookStatuses')) || {};
+        const unlockedBooks = JSON.parse(localStorage.getItem('unlockedBooks')) || [];
+
+        tradingBooks.forEach(book => {
+            const status = statuses[book.id] || 'to-read';
+            const isUnlocked = unlockedBooks.includes(book.id);
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            card.innerHTML = `
+                <div class="book-cover-container">
+                    <div class="book-cover ${book.coverClass}">
+                        <div class="book-cover-title">${book.title}</div>
+                        <div class="book-cover-author">${book.author}</div>
+                    </div>
+                </div>
+                <div class="book-info">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                        <h3 class="card-title" style="font-size: 1.25rem; margin-bottom: 0;">${book.title}</h3>
+                        ${isUnlocked ? '<span style="font-size:0.7rem; color:var(--success); font-weight:700; background:var(--success-glow); padding:0.15rem 0.4rem; border-radius:8px;">Unlocked</span>' : '<span style="font-size:0.7rem; color:var(--accent); font-weight:700; background:var(--accent-glow); padding:0.15rem 0.4rem; border-radius:8px;">Locked</span>'}
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight:600;">By ${book.author}</div>
+                    <p class="card-desc" style="font-size: 0.825rem; line-height: 1.4; color: var(--text-secondary); margin-bottom: 1rem;">${book.description}</p>
+                    
+                    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-top:auto;">
+                        <button class="action-btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; flex:1;" onclick="openBookModal('${book.id}')">
+                            ${isUnlocked ? 'Details & Notes' : '🔒 Unlock for ₹29'}
+                        </button>
+                        <div style="flex:1;">
+                            <select class="book-status-select" onchange="updateBookStatus('${book.id}', this.value)" ${isUnlocked ? '' : 'disabled'}>
+                                <option value="to-read" ${status === 'to-read' ? 'selected' : ''}>📖 To Read</option>
+                                <option value="reading" ${status === 'reading' ? 'selected' : ''}>⏳ Reading</option>
+                                <option value="completed" ${status === 'completed' ? 'selected' : ''}>✅ Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        updateReadingProgress();
+    }
+
+    function updateReadingProgress() {
+        const progressText = document.getElementById('libraryProgressText');
+        const progressBar = document.getElementById('libraryProgressBar');
+        if (!progressText || !progressBar) return;
+
+        const statuses = JSON.parse(localStorage.getItem('bookStatuses')) || {};
+        const completedCount = Object.keys(statuses).filter(id => statuses[id] === 'completed').length;
+        const percent = tradingBooks.length > 0 ? Math.round((completedCount / tradingBooks.length) * 100) : 0;
+
+        progressText.innerText = `${completedCount} of ${tradingBooks.length} Books Completed (${percent}%)`;
+        progressBar.style.width = `${percent}%`;
+    }
+
+    window.updateBookStatus = function(bookId, status) {
+        const statuses = JSON.parse(localStorage.getItem('bookStatuses')) || {};
+        statuses[bookId] = status;
+        localStorage.setItem('bookStatuses', JSON.stringify(statuses));
+        updateReadingProgress();
+        showToast(`Status updated: ${tradingBooks.find(b => b.id === bookId).title}`, "success");
+    };
+
+    let activeBookQuizIndex = 0;
+    let activeBookQuizScore = 0;
+
+    window.openBookModal = function(bookId) {
+        const unlockedBooks = JSON.parse(localStorage.getItem('unlockedBooks')) || [];
+        if (!unlockedBooks.includes(bookId)) {
+            openBookPurchaseModal(bookId);
+            return;
+        }
+
+        const modal = document.getElementById('modal-book-details');
+        const body = document.getElementById('bookModalBody');
+        if (!modal || !body) return;
+
+        const book = tradingBooks.find(b => b.id === bookId);
+        if (!book) return;
+
+        const ratings = JSON.parse(localStorage.getItem('bookRatings')) || {};
+        const rating = ratings[bookId] || 0;
+
+        const notes = JSON.parse(localStorage.getItem('bookNotes')) || {};
+        const noteText = notes[bookId] || '';
+
+        body.innerHTML = `
+            <div class="card-badge" style="background-color: var(--primary-glow); color: #93c5fd;">Reference Details</div>
+            <h3 style="margin-top: 0.75rem; font-family: var(--font-heading);">${book.title}</h3>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">By ${book.author}</div>
+            
+            <h4 style="margin-bottom:0.5rem; font-size:1rem; color:var(--text-primary);">Core Takeaways & Wisdom:</h4>
+            <ul style="margin-bottom:1.5rem; padding-left:1.25rem; font-size:0.9rem; color:var(--text-secondary);">
+                ${book.takeaways.map(t => `<li style="margin-bottom:0.4rem;">${t}</li>`).join('')}
+            </ul>
+
+            <!-- Ratings & Notes Grid -->
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <!-- Ratings Card -->
+                <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
+                    <h4 style="font-size:0.95rem; margin-bottom:0.4rem; color:var(--text-primary);">My Book Rating:</h4>
+                    <div class="star-rating" id="bookStars">
+                        ${[1,2,3,4,5].map(star => `<span class="star ${star <= rating ? 'active' : ''}" data-value="${star}">&starf;</span>`).join('')}
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.25rem;">Rate this trading reference out of 5 stars.</div>
+                </div>
+
+                <!-- Notes Card -->
+                <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display:flex; flex-direction:column;">
+                    <h4 style="font-size:0.95rem; margin-bottom:0.4rem; color:var(--text-primary);">Study Journal & Notes:</h4>
+                    <textarea id="bookNotesArea" placeholder="Write your key notes, observations, or strategies here..." style="width:100%; height:80px; padding:0.5rem; background:var(--bg-dark); color:var(--text-primary); border:1px solid var(--border-color); border-radius:6px; font-size:0.8rem; resize:none; outline:none; transition:border-color var(--transition-fast);">${noteText}</textarea>
+                    <div style="font-size:0.7rem; color:var(--success); margin-top:0.4rem; text-align:right; font-weight:600;">✔ Notes Auto-save active</div>
+                </div>
+            </div>
+
+            <!-- Book Quiz Area -->
+            <div class="book-quiz-container" id="bookQuizBox">
+                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
+                     <span>Book Takeaways Quiz</span>
+                     <button class="action-btn" id="startBookQuizBtn" style="padding:0.25rem 0.75rem; font-size:0.75rem;">Start Reference Test</button>
+                 </h4>
+                 <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0;" id="bookQuizStatus">Test your comprehension of Mark Douglas's or Livermore's core trading philosophies.</p>
+                 <div id="bookQuizPlay" class="hidden" style="margin-top: 1rem;">
+                     <div id="bookQuizProgress" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 700; margin-bottom:0.5rem;">Question 1 of 3</div>
+                     <div id="bookQuizQuestion" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom:0.75rem; min-height: 36px;">Question text</div>
+                     <div id="bookQuizOptions" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+                 </div>
+            </div>
+        `;
+
+        modal.classList.add('active');
+
+        // Register star click handlers
+        const stars = body.querySelectorAll('#bookStars .star');
+        stars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                const selectedVal = parseInt(star.dataset.value);
+                stars.forEach((s, idx) => {
+                    if (idx < selectedVal) s.classList.add('active');
+                    else s.classList.remove('active');
+                });
+
+                const ratings = JSON.parse(localStorage.getItem('bookRatings')) || {};
+                ratings[bookId] = selectedVal;
+                localStorage.setItem('bookRatings', JSON.stringify(ratings));
+                showToast("Rating saved successfully!", "success");
+            });
+        });
+
+        // Register notes textarea autosave listener
+        const notesArea = body.querySelector('#bookNotesArea');
+        if (notesArea) {
+            notesArea.addEventListener('input', (e) => {
+                const notes = JSON.parse(localStorage.getItem('bookNotes')) || {};
+                notes[bookId] = e.target.value;
+                localStorage.setItem('bookNotes', JSON.stringify(notes));
+            });
+        }
+
+        // Register quiz trigger button ONE THE START BUTTEN 
+        const startQuizBtn = body.querySelector('#startBookQuizBtn');
+        if (startQuizBtn) {
+            startQuizBtn.addEventListener('click', () => {
+                startQuizBtn.classList.add('hidden');
+                body.querySelector('#bookQuizStatus').classList.add('hidden');
+                body.querySelector('#bookQuizPlay').classList.remove('hidden');
+                activeBookQuizIndex = 0;
+                activeBookQuizScore = 0;
+                loadBookQuizQuestion(book);
+            });
+        }
+    };
+
+    window.closeBookModal = function() {
+        const modal = document.getElementById('modal-book-details');
+        if (modal) modal.classList.remove('active');
+    };
+
+    function loadBookQuizQuestion(book) {
+        if (activeBookQuizIndex >= book.quiz.length) {
+            showBookQuizResults(book);
+            return;
+        }
+
+        const q = book.quiz[activeBookQuizIndex];
+        document.getElementById('bookQuizProgress').innerText = `Question ${activeBookQuizIndex + 1} of ${book.quiz.length}`;
+        document.getElementById('bookQuizQuestion').innerText = q.question;
+
+        const optionsDiv = document.getElementById('bookQuizOptions');
+        optionsDiv.innerHTML = '';
+
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-opt-btn';
+            btn.style.fontSize = '0.85rem';
+            btn.style.padding = '0.5rem 0.75rem';
+            btn.innerText = opt;
+            btn.addEventListener('click', () => handleBookQuizAnswerSelection(book, idx));
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function handleBookQuizAnswerSelection(book, selectedIdx) {
+        const q = book.quiz[activeBookQuizIndex];
+        const optionBtns = document.getElementById('bookQuizOptions').querySelectorAll('.quiz-opt-btn');
+
+        optionBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedIdx === q.answer) {
+            optionBtns[selectedIdx].classList.add('correct');
+            activeBookQuizScore++;
+            showToast("Correct choice!", "success");
+        } else {
+            optionBtns[selectedIdx].classList.add('wrong');
+            optionBtns[q.answer].classList.add('correct');
+            showToast("Incorrect choice. Review book takeaways!", "error");
+        }
+
+        setTimeout(() => {
+            activeBookQuizIndex++;
+            loadBookQuizQuestion(book);
+        }, 1800);
+    }
+
+    function showBookQuizResults(book) {
+        const playDiv = document.getElementById('bookQuizPlay');
+        const boxDiv = document.getElementById('bookQuizBox');
+        if (!playDiv || !boxDiv) return;
+
+        playDiv.classList.add('hidden');
+
+        const passed = activeBookQuizScore === book.quiz.length;
+        let rewardMessage = '';
+        if (passed) {
+            userCredits += 10;
+            localStorage.setItem('userCredits', userCredits);
+            updateCreditsDisplay();
+            rewardMessage = '<span style="color:var(--success); font-weight:700;">Passed! You earned +10 Credits! 🎁</span>';
+        } else {
+            rewardMessage = '<span style="color:var(--error); font-weight:600;">You missed some questions. Review takeaways and try again.</span>';
+        }
+
+        boxDiv.innerHTML = `
+            <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-primary);">Quiz Results</h4>
+            <p style="font-size:0.9rem; color:var(--text-secondary); line-height:1.5;">
+                You scored <strong>${activeBookQuizScore}/${book.quiz.length}</strong> correct answers.<br>
+                ${rewardMessage}
+            </p>
+            <button class="action-btn" style="font-size:0.75rem; padding:0.25rem 0.75rem; margin-top:0.5rem;" onclick="openBookModal('${book.id}')">Retry Details & Quiz</button>
+        `;
+    }
+
+    // ==========================================
+    // BOOK UNLOCK GATEWAY INTERACTION
+    // ==========================================
+    window.openBookPurchaseModal = function(bookId) {
+        const modal = document.getElementById('modal-book-purchase');
+        if (!modal) return;
+
+        const book = tradingBooks.find(b => b.id === bookId);
+        if (!book) return;
+
+        document.getElementById('purchaseBookId').value = bookId;
+        document.getElementById('purchaseBookTitle').innerText = `Unlock "${book.title}"`;
+        document.getElementById('purchaseBookForm').reset();
+        document.getElementById('purchaseStatusMsg').style.display = 'none';
+
+        modal.classList.add('active');
+    };
+
+    window.closeBookPurchaseModal = function() {
+        const modal = document.getElementById('modal-book-purchase');
+        if (modal) modal.classList.remove('active');
+    };
+
+    const purchaseForm = document.getElementById('purchaseBookForm');
+    if (purchaseForm) {
+        purchaseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const bookId = document.getElementById('purchaseBookId').value;
+            const utr = document.getElementById('purchaseUtr').value.trim();
+            const statusBox = document.getElementById('purchaseStatusMsg');
+            const submitBtn = purchaseForm.querySelector('button[type="submit"]');
+
+            statusBox.style.display = 'block';
+            statusBox.style.color = 'var(--accent)';
+            statusBox.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+            statusBox.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+            statusBox.innerText = `⚡ Verifying ₹29.00 payment status (UTR: ${utr})...`;
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                const unlockedBooks = JSON.parse(localStorage.getItem('unlockedBooks')) || [];
+                if (!unlockedBooks.includes(bookId)) {
+                    unlockedBooks.push(bookId);
+                    localStorage.setItem('unlockedBooks', JSON.stringify(unlockedBooks));
+                }
+
+                statusBox.style.color = 'var(--success)';
+                statusBox.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                statusBox.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                statusBox.innerText = `✔ Payment of ₹29.00 verified! Book successfully unlocked.`;
+                submitBtn.disabled = false;
+
+                setTimeout(() => {
+                    closeBookPurchaseModal();
+                    renderLibrary();
+                    openBookModal(bookId);
+                }, 1000);
+            }, 2500);
+        });
+    }
+
+    // Render initial Glossary, Trading Plan & Reference Library
+    renderGlossary('all');
+    loadSavedTradingPlan();
+    renderLibrary();
 
     // Run Initial Layout State rendering
     renderApplicationStateView();
